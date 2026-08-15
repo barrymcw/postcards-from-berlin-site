@@ -1,0 +1,40 @@
+---
+// src/pages/link-not-found.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Link coming soon">
+  <main>
+    <h1>This link isn't ready yet</h1>
+    <p>
+      The original link here didn't carry over cleanly during the site migration from
+      Squarespace — usually because it pointed to an internal page (like an old store
+      listing) that doesn't have an equivalent yet. It'll be fixed with a real link soon.
+    </p>
+    <a href="/">&larr; Back to the homepage</a>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    padding: 4rem 1.5rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-family: 'swear-display', serif;
+    font-weight: 300;
+    font-style: normal;
+    font-size: 34px;
+    margin: 0 0 1rem;
+  }
+  p {
+    font-size: var(--body-size);
+    line-height: var(--body-line);
+    color: #4a4842;
+    margin: 0 0 2rem;
+  }
+  a {
+    color: inherit;
+  }
+</style>

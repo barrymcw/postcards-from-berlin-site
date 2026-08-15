@@ -1,0 +1,65 @@
+---
+// src/components/BlogRow.astro
+interface BlogTeaser {
+  title: string;
+  slug: {current: string};
+  date: string;
+}
+interface Props {
+  items: BlogTeaser[];
+}
+const {items} = Astro.props;
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
+}
+---
+
+<div class="row-scroller">
+  <div class="row-track">
+    {items.map((item) => (
+      <a class="post-title-link" href={`/blog/${item.slug.current}`}>
+        <span class="post-title">{item.title}</span>
+        <span class="post-date">{formatDate(item.date)}</span>
+      </a>
+    ))}
+  </div>
+</div>
+
+<style>
+  .row-scroller {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    mask-image: linear-gradient(to right, black calc(100% - 3rem), transparent 100%);
+  }
+  .row-track {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    width: max-content;
+  }
+  .post-title-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    text-decoration: none;
+    color: inherit;
+    max-width: 220px;
+    scroll-snap-align: start;
+  }
+  .post-title {
+    font-family: 'swear-display', serif;
+    font-weight: 300;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1.2;
+  }
+  .post-date {
+    font-family: 'degular', sans-serif;
+    font-size: 0.85rem;
+    color: #6b6a63;
+  }
+  .post-title-link:hover .post-title {
+    text-decoration: underline;
+  }
+</style>

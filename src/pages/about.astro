@@ -1,0 +1,115 @@
+---
+// src/pages/about.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PortableText from '../components/PortableText.astro';
+import {croppedUrl, uncroppedUrl} from '../lib/image';
+import {sanityClient} from '../lib/sanity';
+
+const siteSettings = await sanityClient.fetch(`*[_type == "siteSettings"][0]`);
+const heroImage = siteSettings?.aboutHeroImage;
+const statement = siteSettings?.aboutStatement || [];
+const photos = siteSettings?.aboutPhotos || [];
+const bodyCopy = siteSettings?.aboutBodyCopy || [];
+---
+
+<BaseLayout title="About" currentPath="/about">
+  {heroImage && <img class="hero-img" src={croppedUrl(heroImage, 1600, 1400)} alt="" />}
+
+  <main>
+    <div class="statement">
+      <PortableText blocks={statement} />
+    </div>
+
+    {photos.length > 0 && (
+      <div class="photo-sequence">
+        {photos.map((block: any) =>
+          block.layout === 'pair' ? (
+            <div class="photo-pair">
+              {(block.images || []).map((img: any) => (
+                <img src={uncroppedUrl(img, 900)} alt="" />
+              ))}
+            </div>
+          ) : (
+            <div class="photo-full">
+              {block.images?.[0] && <img src={uncroppedUrl(block.images[0], 1400)} alt="" />}
+            </div>
+          )
+        )}
+      </div>
+    )}
+
+    <div class="standard-copy">
+      <PortableText blocks={bodyCopy} />
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .hero-img {
+    width: 100%;
+    height: 75vh;
+    object-fit: cover;
+    display: block;
+  }
+
+  main {
+    padding: 3rem 1.5rem 4rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .statement {
+    font-family: 'swear-display', serif;
+    font-weight: 300;
+    font-style: normal;
+    font-size: 40px;
+    line-height: 1.3;
+    color: rgba(0, 0, 0, 0.9);
+    margin-bottom: 3.5rem;
+  }
+  .statement :global(p) {
+    margin: 0 0 1.1em;
+  }
+  .statement :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .photo-sequence {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 3.5rem;
+  }
+  .photo-full img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .photo-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .photo-pair img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  @media (max-width: 640px) {
+    .photo-pair {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .standard-copy {
+    font-size: var(--body-size);
+    line-height: var(--body-line);
+    max-width: 65ch;
+  }
+  .standard-copy :global(p) {
+    margin: 0 0 1.2em;
+  }
+  .standard-copy :global(a) {
+    color: inherit;
+  }
+</style>

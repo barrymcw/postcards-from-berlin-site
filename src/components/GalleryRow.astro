@@ -1,0 +1,72 @@
+---
+// src/components/GalleryRow.astro
+import {croppedUrl} from '../lib/image';
+
+interface GalleryTeaser {
+  title: string;
+  slug: {current: string};
+  headerImage: any;
+}
+interface Props {
+  items: GalleryTeaser[];
+  basePath: string;
+}
+const {items, basePath} = Astro.props;
+---
+
+<div class="row-scroller">
+  <div class="row-track">
+    {items.map((item) => (
+      <a class="frame" href={`${basePath}/${item.slug.current}`}>
+        {(item.indexThumbnail || item.headerImage) && (
+          <img src={croppedUrl(item.indexThumbnail || item.headerImage, 260, 340)} alt="" width="260" height="340" />
+        )}
+        <span class="frame-caption">{item.title}</span>
+      </a>
+    ))}
+  </div>
+</div>
+
+<style>
+  .row-scroller {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    mask-image: linear-gradient(to right, black calc(100% - 3rem), transparent 100%);
+  }
+  .row-track {
+    display: flex;
+    gap: 5px;
+    width: max-content;
+  }
+  .frame {
+    position: relative;
+    display: block;
+    width: 260px;
+    height: 340px;
+    flex: none;
+    background: #ececec;
+    scroll-snap-align: start;
+  }
+  .frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .frame-caption {
+    position: absolute;
+    left: 0.6rem;
+    bottom: 0.6rem;
+    background: rgba(255, 255, 255, 0.92);
+    padding: 0.2rem 0.55rem;
+    font-size: 0.85rem;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  .frame:hover .frame-caption,
+  .frame:focus-visible .frame-caption {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>

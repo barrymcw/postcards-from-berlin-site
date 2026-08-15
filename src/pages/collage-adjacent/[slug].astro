@@ -1,0 +1,26 @@
+---
+// src/pages/collage-adjacent/[slug].astro
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import GalleryDetail from '../../components/GalleryDetail.astro';
+import {sanityClient} from '../../lib/sanity';
+
+export async function getStaticPaths() {
+  const galleries = await sanityClient.fetch(
+    `*[_type == "gallery" && category == "collage-adjacent"] | order(order asc) { title, slug, headerImage, materials, date, body, gridImages, footerCopy }`
+  );
+  return galleries.map((gallery: any, i: number) => ({
+    params: {slug: gallery.slug.current},
+    props: {
+      gallery,
+      prevGallery: i > 0 ? galleries[i - 1] : null,
+      nextGallery: i < galleries.length - 1 ? galleries[i + 1] : null,
+    },
+  }));
+}
+
+const {gallery, prevGallery, nextGallery} = Astro.props;
+---
+
+<BaseLayout title={`${gallery.title} — Collage Adjacent`} currentPath="/collage-adjacent">
+  <GalleryDetail gallery={gallery} prevGallery={prevGallery} nextGallery={nextGallery} basePath="/collage-adjacent" />
+</BaseLayout>

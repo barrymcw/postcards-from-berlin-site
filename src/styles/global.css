@@ -1,0 +1,85 @@
+/* src/styles/global.css
+ *
+ * The locked design tokens from the design phase, ported directly from
+ * the standalone HTML prototypes. Page-specific type sizes that were
+ * tuned individually per page (gallery titles at 48px, blog post titles
+ * at 34px, the About statement at 40px, etc.) stay scoped to each page's
+ * own component rather than forced into these shared root variables —
+ * that matches how the prototypes were actually built. What's here is
+ * what was explicitly shared site-wide: the landing page's headline/
+ * intro/menu sizing, the color/type role assignments, and the nav.
+ */
+
+:root {
+  --color-bg: #ffffff;
+  --color-text: #22201c;
+
+  /* Swear Display Medium Italic — category titles on the landing page */
+  --headline-weight: 600;
+  --headline-style: italic;
+  --headline-size: 75px;
+  --headline-line: 1;
+  --headline-tracking: 0.6px;
+  --headline-baseline-ratio: 0.78;
+
+  /* Degular — body copy */
+  --body-weight: 400;
+  --body-size: 17px;
+  --body-line: 1.47;
+
+  /* Degular Thin — nav */
+  --menu-weight: 300;
+  --menu-size: 15px;
+  --menu-tracking: 0px;
+
+  /* Swear Display Thin — landing page intro copy */
+  --intro-weight: 300;
+  --intro-size: 62px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'degular', system-ui, sans-serif;
+  font-weight: var(--body-weight);
+  font-size: var(--body-size);
+  line-height: var(--body-line);
+}
+
+/* Shared across every page */
+nav.site-nav {
+  padding: 1.5rem 1.5rem 0;
+}
+nav.site-nav ul {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  font-family: 'degular', sans-serif;
+  font-weight: var(--menu-weight);
+  font-size: var(--menu-size);
+  letter-spacing: var(--menu-tracking);
+}
+nav.site-nav a {
+  color: inherit;
+  text-decoration: none;
+}
+nav.site-nav a:hover {
+  text-decoration: underline;
+}
+nav.site-nav a[aria-current='page'] {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --headline-size: 40px;
+    --intro-size: 32px;
+  }
+}

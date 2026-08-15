@@ -1,0 +1,180 @@
+---
+// src/components/GalleryDetail.astro
+import PortableText from './PortableText.astro';
+import {croppedUrl, uncroppedUrl} from '../lib/image';
+
+interface Props {
+  gallery: any;
+  prevGallery: {title: string; slug: {current: string}} | null;
+  nextGallery: {title: string; slug: {current: string}} | null;
+  basePath: string;
+}
+const {gallery, prevGallery, nextGallery, basePath} = Astro.props;
+---
+
+<main>
+  {gallery.headerImage && (
+    <img class="gallery-header-img" src={croppedUrl(gallery.headerImage, 1400, 900)} alt="" />
+  )}
+
+  <div class="gallery-meta">
+    <h1 class="gallery-title">{gallery.title}</h1>
+    {gallery.materials && <p class="gallery-materials">{gallery.materials}</p>}
+    {gallery.date && <p class="gallery-date">{gallery.date}</p>}
+    <div class="gallery-body">
+      <PortableText blocks={gallery.body || []} />
+    </div>
+  </div>
+
+  <div class="gallery-grid">
+    {(gallery.gridImages || []).map((item: any) => (
+      <div class="grid-item">
+        <img src={uncroppedUrl(item.image, 900)} alt="" />
+        {item.caption && <span class="grid-item-caption">{item.caption}</span>}
+      </div>
+    ))}
+  </div>
+
+  {gallery.footerCopy && (
+    <div class="gallery-footer-copy">
+      <p>{gallery.footerCopy}</p>
+    </div>
+  )}
+
+  <nav class="gallery-pagination" aria-label="Gallery navigation">
+    {prevGallery ? (
+      <a href={`${basePath}/${prevGallery.slug.current}`}>
+        <span class="pagination-label">&larr; Previous</span>
+        <span class="pagination-name">{prevGallery.title}</span>
+      </a>
+    ) : <span />}
+    {nextGallery ? (
+      <a class="pagination-next" href={`${basePath}/${nextGallery.slug.current}`}>
+        <span class="pagination-label">Next &rarr;</span>
+        <span class="pagination-name">{nextGallery.title}</span>
+      </a>
+    ) : <span />}
+  </nav>
+</main>
+
+<style>
+  main {
+    padding: 2rem 1.5rem 4rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .gallery-header-img {
+    width: 100%;
+    max-height: 65vh;
+    object-fit: cover;
+    margin-bottom: 2.5rem;
+    background: #ececec;
+  }
+  .gallery-meta {
+    max-width: 65ch;
+    margin-bottom: 3rem;
+  }
+  .gallery-title {
+    font-family: 'swear-display', serif;
+    font-weight: 600;
+    font-style: italic;
+    font-size: 48px;
+    line-height: 1.05;
+    color: rgba(0, 0, 0, 0.9);
+    margin: 0 0 0.75rem;
+  }
+  .gallery-materials {
+    font-size: var(--body-size);
+    color: #6b6a63;
+    margin: 0 0 0.35rem;
+  }
+  .gallery-date {
+    font-size: 0.85rem;
+    color: #6b6a63;
+    margin: 0 0 1.5rem;
+  }
+  .gallery-body {
+    font-size: var(--body-size);
+    line-height: var(--body-line);
+  }
+  .gallery-body :global(p) {
+    margin: 0 0 1.2em;
+  }
+  .gallery-body :global(a) {
+    color: inherit;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .grid-item {
+    position: relative;
+  }
+  .grid-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .grid-item-caption {
+    position: absolute;
+    left: 0.6rem;
+    bottom: 0.6rem;
+    background: rgba(255, 255, 255, 0.92);
+    padding: 0.2rem 0.55rem;
+    font-size: 0.85rem;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    pointer-events: none;
+  }
+  .grid-item:hover .grid-item-caption {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @media (max-width: 640px) {
+    .gallery-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .gallery-footer-copy {
+    max-width: 65ch;
+    font-size: var(--body-size);
+    line-height: var(--body-line);
+    margin-bottom: 3rem;
+  }
+
+  .gallery-pagination {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #e5e2d8;
+    padding-top: 1.5rem;
+    font-family: 'degular', sans-serif;
+    font-size: var(--body-size);
+  }
+  .gallery-pagination a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .gallery-pagination a:hover .pagination-name {
+    text-decoration: underline;
+  }
+  .pagination-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #6b6a63;
+    margin-bottom: 0.15rem;
+  }
+  .pagination-name {
+    font-family: 'swear-display', serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+  .pagination-next {
+    text-align: right;
+  }
+</style>

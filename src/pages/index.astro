@@ -1,17 +1,77 @@
 ---
+// src/pages/index.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CategorySection from '../components/CategorySection.astro';
+import GalleryRow from '../components/GalleryRow.astro';
+import BlogRow from '../components/BlogRow.astro';
+import {croppedUrl} from '../lib/image';
+import {sanityClient} from '../lib/sanity';
 
+const siteSettings = await sanityClient.fetch(`*[_type == "siteSettings"][0]`);
+
+const collageItems = await sanityClient.fetch(
+  `*[_type == "gallery" && category == "collage"] | order(order asc) [0...6] { title, slug, headerImage, indexThumbnail }`
+);
+const collageAdjacentItems = await sanityClient.fetch(
+  `*[_type == "gallery" && category == "collage-adjacent"] | order(order asc) [0...6] { title, slug, headerImage, indexThumbnail }`
+);
+const blogItems = await sanityClient.fetch(
+  `*[_type == "blogPost"] | order(date desc) [0...8] { title, slug, date }`
+);
+
+const homeHeaderImage = siteSettings?.homeHeaderImage || siteSettings?.defaultHeaderImage;
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="Postcards from Berlin" currentPath="/">
+  {homeHeaderImage && <img class="home-header-img" src={croppedUrl(homeHeaderImage, 1400, 900)} alt="" />}
+
+  <div class="intro">
+    <p>{siteSettings?.introCopy || 'Intro copy not yet set in Site Settings.'}</p>
+  </div>
+
+  <CategorySection title="Collage" blurb={siteSettings?.collageBlurb} href="/collage">
+    <GalleryRow items={collageItems} basePath="/collage" />
+  </CategorySection>
+
+  <CategorySection title="Collage Adjacent" blurb={siteSettings?.collageAdjacentBlurb} href="/collage-adjacent">
+    <GalleryRow items={collageAdjacentItems} basePath="/collage-adjacent" />
+  </CategorySection>
+
+  <CategorySection title="Blog" blurb={siteSettings?.blogBlurb} href="/blog">
+    <BlogRow items={blogItems} />
+  </CategorySection>
+
+  <CategorySection title="About" href="/about">
+    <div class="about-preview">
+      <p>{siteSettings?.aboutBlurb || 'About preview blurb not yet set in Site Settings.'}</p>
+    </div>
+  </CategorySection>
+</BaseLayout>
+
+<style>
+  .home-header-img {
+    width: 100%;
+    max-height: 55vh;
+    object-fit: cover;
+    display: block;
+    background: #ececec;
+  }
+  .intro {
+    padding: 3rem 1.5rem 2rem;
+    max-width: 900px;
+  }
+  .intro p {
+    font-family: 'swear-display', serif;
+    font-weight: var(--intro-weight);
+    font-style: normal;
+    font-size: var(--intro-size);
+    line-height: 1.1;
+    margin: 0;
+  }
+  .about-preview p {
+    font-family: 'degular', sans-serif;
+    font-size: var(--body-size);
+    line-height: var(--body-line);
+    margin: 0;
+  }
+</style>

@@ -1,0 +1,71 @@
+---
+// src/components/CategorySection.astro
+interface Props {
+  title: string;
+  blurb?: string;
+  href: string;
+}
+const {title, blurb, href} = Astro.props;
+---
+
+<section class="category-section">
+  <div class="category-label-col">
+    <a href={href}><h2 class="category-title">{title}</h2></a>
+    {blurb && <p class="category-blurb">{blurb}</p>}
+  </div>
+  <div class="category-content">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .category-section {
+    display: flex;
+    gap: 2rem;
+    padding: 0 1.5rem;
+    margin-bottom: 3rem;
+  }
+  .category-label-col {
+    flex: 0 0 300px;
+  }
+  .category-label-col a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .category-title {
+    font-family: 'swear-display', serif;
+    font-weight: var(--headline-weight);
+    font-style: var(--headline-style);
+    font-size: var(--headline-size);
+    line-height: var(--headline-line);
+    letter-spacing: var(--headline-tracking);
+    color: rgba(0, 0, 0, 0.9);
+    margin: 0 0 0.75rem;
+  }
+  .category-blurb {
+    font-family: 'degular', sans-serif;
+    font-weight: var(--body-weight);
+    font-size: var(--body-size);
+    line-height: var(--body-line);
+    margin: 0;
+  }
+  .category-content {
+    flex: 1;
+    min-width: 0;
+    margin-top: calc(var(--headline-size) * var(--headline-baseline-ratio));
+  }
+
+  @media (max-width: 640px) {
+    .category-section {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .category-label-col {
+      flex: none;
+    }
+    .category-content {
+      width: 100%;
+      margin-top: 0.75rem;
+    }
+  }
+</style>

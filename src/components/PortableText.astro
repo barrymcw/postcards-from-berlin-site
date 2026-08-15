@@ -1,0 +1,128 @@
+---
+// src/components/PortableText.astro
+//
+// Renders the body array from gallery/blogPost/siteSettings documents.
+// Written by hand against our exact schema (rather than pulling in a
+// generic third-party portable-text package) since the block types are
+// few and specific: normal/heading text blocks, numbered/bullet lists,
+// link marks, standalone captioned inline images, and clustered image
+// grids. Keeping this self-contained avoids depending on a package
+// whose current API can't be verified against what's actually installed.
+
+import {uncroppedUrl} from '../lib/image';
+
+interface Props {
+  blocks: any[];
+}
+
+const {blocks} = Astro.props;
+
+// Groups consecutive list-item blocks of the same type together into a
+// single <ol>/<ul>, the way portable text expects list items to render.
+function groupListItems(blocks: any[]) {
+  const groups: any[] = [];
+  let currentList: any[] | null = null;
+  let currentListType: string | null = null;
+
+  for (const block of blocks) {
+    if (block._type === 'block' && block.listItem) {
+      if (currentListType !== block.listItem) {
+        currentList = [];
+        currentListType = block.listItem;
+        groups.push({type: 'list', listType: block.listItem, items: currentList});
+      }
+      currentList!.push(block);
+    } else {
+      currentList = null;
+      currentListType = null;
+      groups.push({type: 'single', block});
+    }
+  }
+  return groups;
+}
+
+function renderSpans(block: any) {
+  // Resolves each span's marks against the block's markDefs (for link
+  // hrefs) and returns an array of {text, tag, href} ready to render.
+  const markDefsByKey: Record<string, any> = {};
+  for (const def of block.markDefs || []) markDefsByKey[def._key] = def;
+
+  return (block.children || []).map((span: any) => {
+    let href: string | null = null;
+    let strong = false;
+    let em = false;
+    for (const mark of span.marks || []) {
+      if (mark === 'strong') strong = true;
+      else if (mark === 'em') em = true;
+      else if (markDefsByKey[mark]?._type === 'link') href = markDefsByKey[mark].href;
+    }
+    return {text: span.text, href, strong, em};
+  });
+}
+
+const groups = groupListItems(blocks || []);
+---
+
+{groups.map((group) => {
+  if (group.type === 'list') {
+    const Tag = group.listType === 'number' ? 'ol' : 'ul';
+    return (
+      <Tag>
+        {group.items.map((block: any) => (
+          <li>
+            {renderSpans(block).map((s: any) => (
+              s.href ? <a href={s.href}>{s.text}</a> :
+              s.strong ? <strong>{s.text}</strong> :
+              s.em ? <em>{s.text}</em> :
+              s.text
+            ))}
+          </li>
+        ))}
+      </Tag>
+    );
+  }
+
+  const block = group.block;
+
+  if (block._type === 'block') {
+    const spans = renderSpans(block);
+    const content = spans.map((s: any) => (
+      s.href ? <a href={s.href}>{s.text}</a> :
+      s.strong ? <strong>{s.text}</strong> :
+      s.em ? <em>{s.text}</em> :
+      s.text
+    ));
+    if (block.style === 'h3') return <h3>{content}</h3>;
+    return <p>{content}</p>;
+  }
+
+  if (block._type === 'inlineImage') {
+    return (
+      <figure class="inline-img-figure">
+        <button
+          type="button"
+          class="lightbox-trigger"
+          data-lightbox-src={uncroppedUrl(block, 1800)}
+          data-lightbox-alt={block.caption || ''}
+        >
+          <img class="inline-img" src={uncroppedUrl(block, 1400)} alt={block.caption || ''} />
+        </button>
+        {block.caption && <figcaption class="inline-caption">{block.caption}</figcaption>}
+      </figure>
+    );
+  }
+
+  if (block._type === 'imageGrid') {
+    return (
+      <div class="post-grid">
+        {(block.images || []).map((img: any) => (
+          <button type="button" class="lightbox-trigger" data-lightbox-src={uncroppedUrl(img, 1800)} data-lightbox-alt="">
+            <img src={uncroppedUrl(img, 900)} alt="" />
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return null;
+})}

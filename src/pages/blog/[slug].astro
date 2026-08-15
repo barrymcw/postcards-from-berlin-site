@@ -1,0 +1,170 @@
+---
+// src/pages/blog/[slug].astro
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PortableText from '../../components/PortableText.astro';
+import {croppedUrl} from '../../lib/image';
+import {sanityClient} from '../../lib/sanity';
+
+export async function getStaticPaths() {
+  const posts = await sanityClient.fetch(
+    `*[_type == "blogPost"] | order(date desc) { title, slug, date, headerImage, body }`
+  );
+  return posts.map((post: any, i: number) => ({
+    params: {slug: post.slug.current},
+    props: {
+      post,
+      // Chronological prev/next: since posts are sorted newest-first,
+      // "previous" (older) is the next array index, "next" (newer) is
+      // the previous array index.
+      prevPost: i < posts.length - 1 ? posts[i + 1] : null,
+      nextPost: i > 0 ? posts[i - 1] : null,
+    },
+  }));
+}
+
+const {post, prevPost, nextPost} = Astro.props;
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
+}
+---
+
+<BaseLayout title={`${post.title} — Blog`} currentPath="/blog">
+  <main class={post.headerImage ? '' : 'no-header'}>
+    {post.headerImage && <img class="post-header-img" src={croppedUrl(post.headerImage, 1400, 900)} alt="" />}
+
+    <p class="post-date">{formatDate(post.date)}</p>
+    <h1 class="post-title">{post.title}</h1>
+
+    <div class="post-body">
+      <PortableText blocks={post.body || []} />
+    </div>
+
+    <nav class="post-pagination" aria-label="Blog post navigation">
+      {prevPost ? (
+        <a href={`/blog/${prevPost.slug.current}`}>
+          <span class="pagination-label">&larr; Previous</span>
+          <span class="pagination-name">{prevPost.title}</span>
+        </a>
+      ) : <span />}
+      {nextPost ? (
+        <a class="pagination-next" href={`/blog/${nextPost.slug.current}`}>
+          <span class="pagination-label">Next &rarr;</span>
+          <span class="pagination-name">{nextPost.title}</span>
+        </a>
+      ) : <span />}
+    </nav>
+  </main>
+</BaseLayout>
+
+<style>
+  main {
+    padding: 2rem 1.5rem 4rem;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  main.no-header {
+    padding-top: 3rem;
+  }
+  .post-header-img {
+    width: 100%;
+    max-height: 65vh;
+    object-fit: cover;
+    display: block;
+    margin: 0 auto 2.5rem;
+    background: #ececec;
+  }
+  .post-date {
+    font-size: 0.85rem;
+    color: #6b6a63;
+    margin: 0 0 0.4rem;
+  }
+  .post-title {
+    font-family: 'swear-display', serif;
+    font-weight: 300;
+    font-style: normal;
+    font-size: 34px;
+    line-height: 1.15;
+    margin: 0 0 2rem;
+  }
+  .post-body {
+    font-size: var(--body-size);
+    line-height: var(--body-line);
+  }
+  .post-body :global(p) {
+    margin: 0 0 1.2em;
+  }
+  .post-body :global(a) {
+    color: inherit;
+  }
+  .post-body :global(.lightbox-trigger) {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: zoom-in;
+    font: inherit;
+  }
+  .post-body :global(.inline-img-figure) {
+    margin: 1.8rem 0;
+  }
+  .post-body :global(.inline-img) {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .post-body :global(.inline-caption) {
+    font-size: 0.8rem;
+    color: #8a887f;
+    margin-top: 0.4rem;
+  }
+  .post-body :global(.post-grid) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+  .post-body :global(.post-grid img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  @media (max-width: 640px) {
+    .post-body :global(.post-grid) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .post-pagination {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #e5e2d8;
+    padding-top: 1.5rem;
+    margin-top: 3rem;
+    font-family: 'degular', sans-serif;
+    font-size: var(--body-size);
+  }
+  .post-pagination a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .post-pagination a:hover .pagination-name {
+    text-decoration: underline;
+  }
+  .pagination-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #6b6a63;
+    margin-bottom: 0.15rem;
+  }
+  .pagination-name {
+    font-family: 'swear-display', serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+  }
+  .pagination-next {
+    text-align: right;
+  }
+</style>

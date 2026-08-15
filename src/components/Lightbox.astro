@@ -1,0 +1,159 @@
+---
+// src/components/Lightbox.astro
+//
+// One shared modal per page, included once in BaseLayout. Any element
+// anywhere on the page can trigger it by carrying a data-lightbox-src
+// attribute — no per-image JS needed, just one delegated click listener.
+//
+// Navigation: every lightbox-triggering element currently on the page,
+// in DOM order, forms one browsable set — so within a blog post, arrow
+// buttons/keys move between all its images regardless of whether they're
+// inline or part of a grid. Wraps around at both ends. Arrows/keys are
+// hidden automatically when there's only one image to look at.
+---
+
+<div id="lightbox-overlay" class="lightbox-overlay" hidden>
+  <button id="lightbox-close" class="lightbox-close" aria-label="Close image">&times;</button>
+  <button id="lightbox-prev" class="lightbox-nav lightbox-prev" aria-label="Previous image">&larr;</button>
+  <img id="lightbox-img" class="lightbox-img" src="" alt="" />
+  <button id="lightbox-next" class="lightbox-nav lightbox-next" aria-label="Next image">&rarr;</button>
+</div>
+
+<style>
+  .lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 10, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 2rem;
+  }
+  .lightbox-overlay[hidden] {
+    display: none;
+  }
+  .lightbox-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .lightbox-close {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+  }
+  .lightbox-nav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .lightbox-nav:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+  .lightbox-nav[hidden] {
+    display: none;
+  }
+  .lightbox-prev {
+    left: 1rem;
+  }
+  .lightbox-next {
+    right: 1rem;
+  }
+</style>
+
+<script>
+  const overlay = document.getElementById('lightbox-overlay') as HTMLDivElement;
+  const img = document.getElementById('lightbox-img') as HTMLImageElement;
+  const closeBtn = document.getElementById('lightbox-close') as HTMLButtonElement;
+  const prevBtn = document.getElementById('lightbox-prev') as HTMLButtonElement;
+  const nextBtn = document.getElementById('lightbox-next') as HTMLButtonElement;
+  let lastFocused: HTMLElement | null = null;
+
+  let group: {src: string; alt: string}[] = [];
+  let currentIndex = 0;
+
+  // Every lightbox trigger currently on the page, in document order —
+  // rebuilt on each open so it always reflects what's actually rendered.
+  function buildGroup(): HTMLElement[] {
+    const triggers = Array.from(document.querySelectorAll<HTMLElement>('[data-lightbox-src]'));
+    group = triggers.map((el) => ({
+      src: el.getAttribute('data-lightbox-src') || '',
+      alt: el.getAttribute('data-lightbox-alt') || '',
+    }));
+    return triggers;
+  }
+
+  function showImage(index: number) {
+    if (group.length === 0) return;
+    currentIndex = (index + group.length) % group.length; // wraps at both ends
+    const item = group[currentIndex];
+    img.src = item.src;
+    img.alt = item.alt;
+    const multiple = group.length > 1;
+    prevBtn.hidden = !multiple;
+    nextBtn.hidden = !multiple;
+  }
+
+  function openLightbox(trigger: HTMLElement) {
+    const triggers = buildGroup();
+    const startIndex = triggers.indexOf(trigger);
+    overlay.hidden = false;
+    lastFocused = trigger;
+    showImage(startIndex >= 0 ? startIndex : 0);
+    closeBtn.focus();
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    overlay.hidden = true;
+    img.src = '';
+    document.body.style.overflow = '';
+    lastFocused?.focus();
+  }
+
+  // Delegated listener: works for any lightbox trigger on the page,
+  // including ones rendered dynamically inside PortableText content.
+  document.addEventListener('click', (e) => {
+    const trigger = (e.target as HTMLElement).closest('[data-lightbox-src]') as HTMLElement | null;
+    if (trigger) {
+      e.preventDefault();
+      openLightbox(trigger);
+    }
+  });
+
+  closeBtn.addEventListener('click', closeLightbox);
+  prevBtn.addEventListener('click', () => showImage(currentIndex - 1));
+  nextBtn.addEventListener('click', () => showImage(currentIndex + 1));
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeLightbox();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (overlay.hidden) return;
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === 'ArrowLeft') showImage(currentIndex - 1);
+    else if (e.key === 'ArrowRight') showImage(currentIndex + 1);
+  });
+</script>

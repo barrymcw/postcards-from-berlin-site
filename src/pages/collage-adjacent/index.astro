@@ -1,0 +1,21 @@
+---
+// src/pages/collage-adjacent/index.astro
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import GalleryIndex from '../../components/GalleryIndex.astro';
+import {sanityClient} from '../../lib/sanity';
+
+const siteSettings = await sanityClient.fetch(`*[_type == "siteSettings"][0]`);
+const galleries = await sanityClient.fetch(
+  `*[_type == "gallery" && category == "collage-adjacent"] | order(order asc) { title, slug, headerImage, indexThumbnail }`
+);
+---
+
+<BaseLayout title="Collage Adjacent" currentPath="/collage-adjacent">
+  <GalleryIndex
+    title="Collage Adjacent"
+    blurb={siteSettings?.collageAdjacentBlurb}
+    headerImage={siteSettings?.collageAdjacentHeaderImage || siteSettings?.defaultHeaderImage}
+    galleries={galleries}
+    basePath="/collage-adjacent"
+  />
+</BaseLayout>

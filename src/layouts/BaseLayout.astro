@@ -1,0 +1,64 @@
+---
+// src/layouts/BaseLayout.astro
+//
+// Wraps every page: loads the Adobe Fonts kit, global CSS, and renders
+// the shared nav. `currentPath` is used to mark the active nav item.
+
+import '../styles/global.css';
+import Lightbox from '../components/Lightbox.astro';
+
+interface Props {
+  title: string;
+  currentPath?: string;
+}
+
+const {title, currentPath = ''} = Astro.props;
+
+const navItems = [
+  {label: 'Home', href: '/'},
+  {label: 'Collage', href: '/collage'},
+  {label: 'Collage Adjacent', href: '/collage-adjacent'},
+  {label: 'Blog', href: '/blog'},
+  {label: 'About', href: '/about'},
+];
+
+function isCurrent(itemHref: string, path: string) {
+  // Plain startsWith would let '/collage' match '/collage-adjacent' too,
+  // since one is a literal string prefix of the other — needs an exact
+  // match, or a real path-segment boundary (a trailing slash) before
+  // treating a nested path as "under" this nav item.
+  if (itemHref === '/') return path === '/';
+  return path === itemHref || path.startsWith(itemHref + '/');
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+
+  <!-- Adobe Fonts: preconnect for speed, then the kit itself -->
+  <link rel="preconnect" href="https://use.typekit.net" crossorigin />
+  <link rel="preconnect" href="https://p.typekit.net" crossorigin />
+  <link rel="stylesheet" href="https://use.typekit.net/clw8qoi.css" />
+</head>
+<body>
+  <nav class="site-nav" aria-label="Primary">
+    <ul>
+      {navItems.map((item) => (
+        <li>
+          <a href={item.href} aria-current={isCurrent(item.href, currentPath) ? 'page' : undefined}>
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <slot />
+
+  <Lightbox />
+</body>
+</html>
