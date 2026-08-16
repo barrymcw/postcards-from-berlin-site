@@ -35,9 +35,9 @@ const {gallery, prevGallery, nextGallery, basePath} = Astro.props;
     ))}
   </div>
 
-  {gallery.footerCopy && (
+  {gallery.footerCopy && gallery.footerCopy.length > 0 && (
     <div class="gallery-footer-copy">
-      <p>{gallery.footerCopy}</p>
+      <PortableText blocks={gallery.footerCopy} />
     </div>
   )}
 
@@ -146,6 +146,15 @@ const {gallery, prevGallery, nextGallery, basePath} = Astro.props;
     font-size: var(--body-size);
     line-height: var(--body-line);
     margin-bottom: 3rem;
+  }
+  .gallery-footer-copy :global(p) {
+    margin: 0 0 1.2em;
+  }
+  .gallery-footer-copy :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .gallery-footer-copy :global(a) {
+    color: inherit;
   }
 
   .gallery-pagination {
