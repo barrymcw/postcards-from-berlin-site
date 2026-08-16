@@ -9,7 +9,7 @@
 import {createClient} from '@sanity/client';
 
 export const sanityClient = createClient({
-  projectId: 'YOUR_PROJECT_ID_HERE', // same project ID used everywhere else
+  projectId: '4xawi0co', // same project ID used everywhere else
   dataset: 'production',
   apiVersion: '2024-01-01',
   // Deliberately false, not true. This is a static build — every query
