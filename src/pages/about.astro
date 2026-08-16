@@ -10,6 +10,14 @@ const heroImage = siteSettings?.aboutHeroImage;
 const statement = siteSettings?.aboutStatement || [];
 const photos = siteSettings?.aboutPhotos || [];
 const bodyCopy = siteSettings?.aboutBodyCopy || [];
+const colophonHeading = siteSettings?.colophonHeading;
+const colophonBody = siteSettings?.colophonBody || [];
+
+// Fully automatic — reflects when this page was last actually built, not
+// something anyone needs to update by hand. Since the site rebuilds
+// itself within minutes of any publish (via the Sanity webhook), this
+// stays accurate on its own.
+const lastUpdated = new Date().toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
 ---
 
 <BaseLayout title="About" currentPath="/about">
@@ -41,6 +49,16 @@ const bodyCopy = siteSettings?.aboutBodyCopy || [];
     <div class="standard-copy">
       <PortableText blocks={bodyCopy} />
     </div>
+
+    {(colophonHeading || colophonBody.length > 0) && (
+      <div class="colophon">
+        {colophonHeading && <h2 class="colophon-heading">{colophonHeading}</h2>}
+        <div class="colophon-body">
+          <PortableText blocks={colophonBody} />
+        </div>
+        <p class="last-updated">Last updated {lastUpdated}</p>
+      </div>
+    )}
   </main>
 </BaseLayout>
 
@@ -88,6 +106,7 @@ const bodyCopy = siteSettings?.aboutBodyCopy || [];
   .photo-pair {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    align-items: start;
     gap: 1.5rem;
   }
   .photo-pair img {
@@ -111,5 +130,36 @@ const bodyCopy = siteSettings?.aboutBodyCopy || [];
   }
   .standard-copy :global(a) {
     color: inherit;
+  }
+
+  .colophon {
+    margin-top: 3.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e2d8;
+    max-width: 65ch;
+  }
+  .colophon-heading {
+    font-family: 'swear-display', serif;
+    font-weight: 300;
+    font-style: normal;
+    font-size: 32px;
+    line-height: 1.2;
+    color: rgba(0, 0, 0, 0.9);
+    margin: 0 0 1rem;
+  }
+  .colophon-body {
+    font-size: var(--body-size);
+    line-height: var(--body-line);
+  }
+  .colophon-body :global(p) {
+    margin: 0 0 1.2em;
+  }
+  .colophon-body :global(a) {
+    color: inherit;
+  }
+  .last-updated {
+    font-size: 0.85rem;
+    color: #8a887f;
+    margin: 1.5rem 0 0;
   }
 </style>
