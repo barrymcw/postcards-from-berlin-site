@@ -27,7 +27,7 @@ const {gallery, prevGallery, nextGallery, basePath} = Astro.props;
   </div>
 
   <div class="gallery-grid">
-    {(gallery.gridImages || []).map((item: any) => (
+    {(gallery.gridImages || []).filter((item: any) => item.image).map((item: any) => (
       <div class="grid-item">
         <img src={uncroppedUrl(item.image, 900)} alt="" />
         {item.caption && <span class="grid-item-caption">{item.caption}</span>}
