@@ -6,7 +6,7 @@ import {sanityClient} from '../../lib/sanity';
 
 const siteSettings = await sanityClient.fetch(`*[_type == "siteSettings"][0]`);
 const galleries = await sanityClient.fetch(
-  `*[_type == "gallery" && category == "collage-adjacent"] | order(order asc) { title, slug, headerImage, indexThumbnail }`
+  `*[_type == "gallery" && category == "collage-adjacent"] | order(orderRank asc) { title, slug, headerImage, indexThumbnail }`
 );
 ---
 

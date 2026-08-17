@@ -10,10 +10,10 @@ import {sanityClient} from '../lib/sanity';
 const siteSettings = await sanityClient.fetch(`*[_type == "siteSettings"][0]`);
 
 const collageItems = await sanityClient.fetch(
-  `*[_type == "gallery" && category == "collage"] | order(order asc) [0...6] { title, slug, headerImage, indexThumbnail }`
+  `*[_type == "gallery" && category == "collage"] | order(orderRank asc) [0...6] { title, slug, headerImage, indexThumbnail }`
 );
 const collageAdjacentItems = await sanityClient.fetch(
-  `*[_type == "gallery" && category == "collage-adjacent"] | order(order asc) [0...6] { title, slug, headerImage, indexThumbnail }`
+  `*[_type == "gallery" && category == "collage-adjacent"] | order(orderRank asc) [0...6] { title, slug, headerImage, indexThumbnail }`
 );
 const blogItems = await sanityClient.fetch(
   `*[_type == "blogPost"] | order(date desc) [0...8] { title, slug, date }`

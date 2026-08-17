@@ -6,7 +6,7 @@ import {sanityClient} from '../../lib/sanity';
 
 export async function getStaticPaths() {
   const galleries = await sanityClient.fetch(
-    `*[_type == "gallery" && category == "collage"] | order(order asc) { title, slug, headerImage, materials, date, body, gridImages, footerCopy }`
+    `*[_type == "gallery" && category == "collage"] | order(orderRank asc) { title, slug, headerImage, materials, date, body, gridImages, footerCopy }`
   );
   return galleries.map((gallery: any, i: number) => ({
     params: {slug: gallery.slug.current},
