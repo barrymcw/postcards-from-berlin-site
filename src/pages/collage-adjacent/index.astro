@@ -14,6 +14,7 @@ const galleries = await sanityClient.fetch(
   <GalleryIndex
     title="Collage Adjacent"
     blurb={siteSettings?.collageAdjacentBlurb}
+    bodyCopy={siteSettings?.collageAdjacentBodyCopy}
     headerImage={siteSettings?.collageAdjacentHeaderImage || siteSettings?.defaultHeaderImage}
     galleries={galleries}
     basePath="/collage-adjacent"
