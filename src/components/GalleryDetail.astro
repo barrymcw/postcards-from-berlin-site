@@ -13,6 +13,12 @@ interface Props {
 const {gallery, prevGallery, nextGallery, basePath} = Astro.props;
 
 const videoSrc = gallery.video ? fileUrl(gallery.video) : null;
+const hasYearGroups = gallery.yearGroups && gallery.yearGroups.length > 0;
+
+// Newest year first, regardless of the order groups were entered in Studio.
+const sortedYearGroups = hasYearGroups
+  ? [...gallery.yearGroups].sort((a: any, b: any) => Number(b.year) - Number(a.year))
+  : [];
 ---
 
 <main>
@@ -37,14 +43,44 @@ const videoSrc = gallery.video ? fileUrl(gallery.video) : null;
     </div>
   </div>
 
-  <div class="gallery-grid">
-    {(gallery.gridImages || []).filter((item: any) => item.image).map((item: any) => (
-      <div class="grid-item">
-        <img src={uncroppedUrl(item.image, 900)} alt="" />
-        {item.caption && <span class="grid-item-caption">{item.caption}</span>}
-      </div>
-    ))}
-  </div>
+  {hasYearGroups && (
+    <div class="year-archive">
+      <nav class="year-jump" aria-label="Jump to year">
+        {sortedYearGroups.map((group: any) => (
+          <a href={`#year-${group.year}`}>{group.year}</a>
+        ))}
+      </nav>
+
+      {sortedYearGroups.map((group: any) => (
+        <section class="year-section" id={`year-${group.year}`}>
+          <h2 class="year-heading">{group.year}</h2>
+          <div class="year-grid">
+            {(group.images || []).filter((img: any) => img?.asset).map((img: any) => (
+              <div class="year-grid-item">
+                <img src={uncroppedUrl(img, 900)} alt="" />
+                {img.caption && img.caption.length > 0 && (
+                  <div class="year-caption">
+                    <PortableText blocks={img.caption} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  )}
+
+  {!hasYearGroups && (
+    <div class="gallery-grid">
+      {(gallery.gridImages || []).filter((item: any) => item.image).map((item: any) => (
+        <div class="grid-item">
+          <img src={uncroppedUrl(item.image, 900)} alt="" />
+          {item.caption && <span class="grid-item-caption">{item.caption}</span>}
+        </div>
+      ))}
+    </div>
+  )}
 
   {gallery.footerCopy && gallery.footerCopy.length > 0 && (
     <div class="gallery-footer-copy">
@@ -82,7 +118,7 @@ const videoSrc = gallery.video ? fileUrl(gallery.video) : null;
     background: #ececec;
   }
   .gallery-meta {
-    max-width: 65ch;
+    max-width: 120ch;
     margin-bottom: 3rem;
   }
   .gallery-title {
@@ -129,6 +165,7 @@ const videoSrc = gallery.video ? fileUrl(gallery.video) : null;
     color: inherit;
   }
 
+  /* Standard grid (ordinary galleries) */
   .gallery-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -166,8 +203,78 @@ const videoSrc = gallery.video ? fileUrl(gallery.video) : null;
     }
   }
 
+  /* Year-grouped archive (large collections, e.g. Museum of Bottle Drawings) */
+  .year-jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e2d8;
+  }
+  .year-jump a {
+    font-family: 'degular', sans-serif;
+    font-size: 0.9rem;
+    color: #6b6a63;
+    text-decoration: none;
+    padding: 0.25rem 0.1rem;
+    border-bottom: 1px solid transparent;
+  }
+  .year-jump a:hover {
+    color: rgba(0, 0, 0, 0.9);
+    border-bottom-color: currentColor;
+  }
+  .year-section {
+    margin-bottom: 3.5rem;
+    scroll-margin-top: 1.5rem;
+  }
+  .year-heading {
+    font-family: 'swear-display', serif;
+    font-weight: 600;
+    font-size: 1.6rem;
+    margin: 0 0 1.25rem;
+    color: rgba(0, 0, 0, 0.9);
+  }
+  .year-grid {
+    columns: 3;
+    column-gap: 1.5rem;
+  }
+  .year-grid-item {
+    break-inside: avoid;
+    margin-bottom: 1.75rem;
+  }
+  .year-grid-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .year-caption {
+    font-size: 0.8rem;
+    font-style: italic;
+    color: #6b6a63;
+    line-height: 1.4;
+    margin-top: 0.5rem;
+  }
+  .year-caption :global(p) {
+    margin: 0;
+  }
+  .year-caption :global(strong) {
+    font-style: normal;
+    font-weight: 600;
+  }
+  @media (max-width: 900px) {
+    .year-grid {
+      columns: 2;
+    }
+  }
+  @media (max-width: 560px) {
+    .year-grid {
+      columns: 1;
+    }
+  }
+
   .gallery-footer-copy {
-    max-width: 65ch;
+    max-width: 120ch;
     font-size: var(--body-size);
     line-height: var(--body-line);
     margin-bottom: 3rem;
