@@ -5,11 +5,13 @@
 // Written by hand against our exact schema (rather than pulling in a
 // generic third-party portable-text package) since the block types are
 // few and specific: normal/heading text blocks, numbered/bullet lists,
-// link marks, standalone captioned inline images, and clustered image
-// grids. Keeping this self-contained avoids depending on a package
-// whose current API can't be verified against what's actually installed.
+// link marks, standalone captioned inline images, clustered image
+// grids, and standalone video blocks. Keeping this self-contained avoids
+// depending on a package whose current API can't be verified against
+// what's actually installed.
 
 import {uncroppedUrl} from '../lib/image';
+import {fileUrl} from '../lib/video';
 
 interface Props {
   blocks: any[];
@@ -121,6 +123,17 @@ const groups = groupListItems(blocks || []);
           </button>
         ))}
       </div>
+    );
+  }
+
+  if (block._type === 'videoBlock') {
+    const src = fileUrl(block);
+    if (!src) return null;
+    return (
+      <figure class="video-figure">
+        <video class="inline-video" src={src} controls playsinline></video>
+        {block.caption && <figcaption class="inline-caption">{block.caption}</figcaption>}
+      </figure>
     );
   }
 
