@@ -4,11 +4,11 @@
 // Renders the body array from gallery/blogPost/siteSettings documents.
 // Written by hand against our exact schema (rather than pulling in a
 // generic third-party portable-text package) since the block types are
-// few and specific: normal/heading text blocks, numbered/bullet lists,
-// link marks, standalone captioned inline images, clustered image
-// grids, and standalone video blocks. Keeping this self-contained avoids
-// depending on a package whose current API can't be verified against
-// what's actually installed.
+// few and specific: normal/heading/quote text blocks, numbered/bullet
+// lists, bold/italic/underline/strikethrough/link marks, standalone
+// captioned inline images, clustered image grids, and standalone video
+// blocks. Keeping this self-contained avoids depending on a package whose
+// current API can't be verified against what's actually installed.
 
 import {uncroppedUrl} from '../lib/image';
 import {fileUrl} from '../lib/video';
@@ -43,23 +43,51 @@ function groupListItems(blocks: any[]) {
   return groups;
 }
 
-function renderSpans(block: any) {
-  // Resolves each span's marks against the block's markDefs (for link
-  // hrefs) and returns an array of {text, tag, href} ready to render.
+function escapeHtml(s: string) {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Only allow normal link targets (no javascript: etc.).
+function safeHref(href: unknown) {
+  if (typeof href !== 'string') return null;
+  const h = href.trim();
+  return /^(https?:|mailto:|tel:|\/|#)/i.test(h) ? h : null;
+}
+
+const MARK_TAGS: Record<string, string> = {
+  strong: 'strong',
+  em: 'em',
+  underline: 'u',
+  'strike-through': 's',
+};
+
+// Turns a block's spans into an HTML string. Marks nest properly, so text
+// that is bold AND italic AND a link keeps all three (the previous version
+// only kept one mark per span). All text is escaped.
+function inlineHtml(block: any): string {
   const markDefsByKey: Record<string, any> = {};
   for (const def of block.markDefs || []) markDefsByKey[def._key] = def;
 
-  return (block.children || []).map((span: any) => {
-    let href: string | null = null;
-    let strong = false;
-    let em = false;
-    for (const mark of span.marks || []) {
-      if (mark === 'strong') strong = true;
-      else if (mark === 'em') em = true;
-      else if (markDefsByKey[mark]?._type === 'link') href = markDefsByKey[mark].href;
-    }
-    return {text: span.text, href, strong, em};
-  });
+  return (block.children || [])
+    .map((span: any) => {
+      if (span._type && span._type !== 'span') return '';
+      let html = escapeHtml(span.text || '');
+      for (const mark of span.marks || []) {
+        const tag = MARK_TAGS[mark];
+        if (tag) {
+          html = `<${tag}>${html}</${tag}>`;
+        } else if (markDefsByKey[mark]?._type === 'link') {
+          const href = safeHref(markDefsByKey[mark].href);
+          if (href) html = `<a href="${escapeHtml(href)}">${html}</a>`;
+        }
+      }
+      return html;
+    })
+    .join('');
 }
 
 const groups = groupListItems(blocks || []);
@@ -71,14 +99,7 @@ const groups = groupListItems(blocks || []);
     return (
       <Tag>
         {group.items.map((block: any) => (
-          <li>
-            {renderSpans(block).map((s: any) => (
-              s.href ? <a href={s.href}>{s.text}</a> :
-              s.strong ? <strong>{s.text}</strong> :
-              s.em ? <em>{s.text}</em> :
-              s.text
-            ))}
-          </li>
+          <li set:html={inlineHtml(block)} />
         ))}
       </Tag>
     );
@@ -87,15 +108,14 @@ const groups = groupListItems(blocks || []);
   const block = group.block;
 
   if (block._type === 'block') {
-    const spans = renderSpans(block);
-    const content = spans.map((s: any) => (
-      s.href ? <a href={s.href}>{s.text}</a> :
-      s.strong ? <strong>{s.text}</strong> :
-      s.em ? <em>{s.text}</em> :
-      s.text
-    ));
-    if (block.style === 'h3') return <h3>{content}</h3>;
-    return <p>{content}</p>;
+    const html = inlineHtml(block);
+    switch (block.style) {
+      case 'h2': return <h2 class="pt-h2" set:html={html} />;
+      case 'h3': return <h3 class="pt-h3" set:html={html} />;
+      case 'h4': return <h4 class="pt-h4" set:html={html} />;
+      case 'blockquote': return <blockquote class="pt-quote" set:html={html} />;
+      default: return <p set:html={html} />;
+    }
   }
 
   if (block._type === 'inlineImage') {
@@ -139,3 +159,47 @@ const groups = groupListItems(blocks || []);
 
   return null;
 })}
+
+<style is:global>
+  /* Default look for headings and quotes inside rich text. Written as plain
+     class selectors so any page can still override them with its own CSS.
+     Tweak sizes/spacing here and it applies site-wide. */
+  .pt-h2,
+  .pt-h3,
+  .pt-h4 {
+    color: rgba(0, 0, 0, 0.9);
+    line-height: 1.2;
+    margin: 2em 0 0.6em;
+  }
+  .pt-h2 {
+    font-family: 'swear-display', serif;
+    font-weight: 600;
+    font-size: 1.6rem;
+  }
+  .pt-h3 {
+    font-family: 'swear-display', serif;
+    font-weight: 600;
+    font-size: 1.3rem;
+  }
+  .pt-h4 {
+    font-family: 'degular', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+  }
+  .pt-h2:first-child,
+  .pt-h3:first-child,
+  .pt-h4:first-child {
+    margin-top: 0;
+  }
+  .pt-quote {
+    margin: 1.6em 0;
+    padding-left: 1.2rem;
+    border-left: 2px solid #d8d5ca;
+    font-family: 'swear-display', serif;
+    font-style: italic;
+    font-size: 1.15em;
+    line-height: 1.45;
+    color: #4a4943;
+  }
+</style>
