@@ -1,0 +1,10 @@
+{
+  // Cloudflare Workers config for the static Astro site.
+  // Stops Cloudflare's deploy step from auto-configuring the project
+  // (adding the Astro adapter) on every build.
+  "name": "postcards-from-berlin-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}
